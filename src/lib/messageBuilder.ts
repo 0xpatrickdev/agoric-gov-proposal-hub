@@ -1,18 +1,15 @@
 import { CoreEvalProposal } from "@agoric/cosmic-proto/swingset/swingset.js";
 import { MsgInstallBundle } from "@agoric/cosmic-proto/swingset/msgs.js";
 import { StdFee } from "@cosmjs/amino";
-import { fromBech32 } from "@cosmjs/encoding";
-import { coins, Registry } from "@cosmjs/proto-signing";
-import { defaultRegistryTypes } from "@cosmjs/stargate";
+import { coins } from "@cosmjs/proto-signing";
 import { TextProposal } from "cosmjs-types/cosmos/gov/v1beta1/gov";
 import { Any } from "cosmjs-types/google/protobuf/any";
+import { toAccAddress } from "@cosmjs/stargate/build/queryclient/utils";
+// import { toBase64 } from "@cosmjs/encoding";
 
-export const registry = new Registry([
-  ...defaultRegistryTypes,
-  // ["/cosmos.tx.v1beta1.Tx", Tx],
-  // ["/cosmos.tx.v1beta1.TxBody", TxBody],
+export const registryTypes = [
   ["/agoric.swingset.MsgInstallBundle", MsgInstallBundle],
-]);
+];
 
 interface MakeTextProposalArgs {
   title: string;
@@ -25,20 +22,18 @@ export const makeTextProposalMsg = ({
   title,
   description,
   proposer,
-  depositAmount = 1000000,
+  depositAmount = 1,
 }: MakeTextProposalArgs) => ({
   typeUrl: "/cosmos.gov.v1beta1.MsgSubmitProposal",
   value: {
     content: Any.fromPartial({
       typeUrl: "/cosmos.gov.v1beta1.TextProposal",
-      value: Uint8Array.from(
-        TextProposal.encode(
-          TextProposal.fromPartial({
-            title,
-            description,
-          })
-        ).finish()
-      ),
+      value: TextProposal.encode(
+        TextProposal.fromPartial({
+          title,
+          description,
+        })
+      ).finish(),
     }),
     proposer,
     initialDeposit: coins(depositAmount, "ubld"),
@@ -50,21 +45,19 @@ export const makeCoreEvalProposalMsg = ({
   description,
   evals,
   proposer,
-  depositAmount = 1000000,
+  depositAmount = 1,
 }: CoreEvalProposal & { proposer: string; depositAmount?: number }) => ({
   typeUrl: "/cosmos.gov.v1beta1.MsgSubmitProposal",
   value: {
     content: Any.fromPartial({
       typeUrl: "/agoric.swingset.CoreEvalProposal",
-      value: Uint8Array.from(
-        CoreEvalProposal.encode(
-          CoreEvalProposal.fromPartial({
-            title,
-            description,
-            evals,
-          })
-        ).finish()
-      ),
+      value: CoreEvalProposal.encode(
+        CoreEvalProposal.fromPartial({
+          title,
+          description,
+          evals,
+        })
+      ).finish(),
     }),
     proposer,
     initialDeposit: coins(depositAmount || 0, "ubld"),
@@ -76,19 +69,15 @@ export interface MsgInstallArgs {
   submitter: string;
 }
 
-export const makeInstallBundleMsg = ({
-  bundle,
-  submitter,
-}: MsgInstallArgs) => ({
+export const makeInstallBundleMsg = ({ bundle, submitter }: MsgInstallArgs) => ({
   typeUrl: "/agoric.swingset.MsgInstallBundle",
-  value: Uint8Array.from(
-    MsgInstallBundle.encode(
-      MsgInstallBundle.fromPartial({
-        bundle,
-        submitter: fromBech32(submitter).data,
-      })
-    ).finish()
-  ),
+  value: MsgInstallBundle.encode(
+    MsgInstallBundle.fromPartial({
+      bundle,
+      // submitter: toBase64(toAccAddress(submitter)),
+      submitter: toAccAddress(submitter),
+    })
+  ).finish(),
 });
 
 interface MakeFeeObjectArgs {

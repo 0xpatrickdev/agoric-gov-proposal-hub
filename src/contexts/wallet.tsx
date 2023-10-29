@@ -5,12 +5,16 @@ import { AccountData } from "@keplr-wallet/types";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { suggestChain } from "../lib/suggestChain";
 import { getNetConfigUrl } from "../lib/getNetworkConfig";
-import { registry } from "../lib/messageBuilder";
+import { registryTypes } from "../lib/messageBuilder";
+import { makeInteractiveSigner } from "@agoric/web-components";
+import { BundleConverter, GovConverter } from "../lib/amino";
+
+type SigningClient = Awaited<ReturnType<typeof makeInteractiveSigner>>;
 
 interface WalletContext {
   walletAddress: string | null;
   connectWallet: () => Promise<void>;
-  stargateClient: SigningStargateClient | undefined;
+  stargateClient: SigningClient | undefined;
   isLoading: boolean;
 }
 
@@ -26,7 +30,7 @@ export const WalletContextProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const stargateClient = useRef<SigningStargateClient | undefined>(undefined);
+  const stargateClient = useRef<SigningClient | undefined>(undefined);
   const { netName } = useNetwork();
   const [currNetName, setCurrNetName] = useState(netName);
   const [walletAddress, setWalletAddress] = useState<
@@ -56,15 +60,23 @@ export const WalletContextProvider = ({
       if (accounts?.[0].address !== walletAddress) {
         saveAddress(accounts[0]);
       }
+
       try {
-        stargateClient.current = await SigningStargateClient.connectWithSigner(
+        stargateClient.current = await makeInteractiveSigner(
+          chainId,
           rpc,
-          offlineSigner,
+          // @ts-expect-error window.keplr (sdk version mismatch)
+          window.keplr,
+          SigningStargateClient.connectWithSigner,
           {
-            registry,
             gasPrice: {
               denom: "uist",
               amount: Decimal.fromUserInput("50000000", 0),
+            },
+            registryTypes,
+            converters: {
+              ...BundleConverter,
+              ...GovConverter,
             },
           }
         );

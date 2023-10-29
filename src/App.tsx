@@ -12,7 +12,7 @@ import {
   makeCoreEvalProposalMsg,
   makeTextProposalMsg,
   makeInstallBundleMsg,
-  makeFeeObject,
+  // makeFeeObject,
 } from "./lib/messageBuilder";
 import { isValidBundle } from "./utils/validate";
 
@@ -24,14 +24,10 @@ const App = () => {
   async function signAndBroadcast(proposalMsg, feeArgs = {}) {
     if (!stargateClient) throw new Error("stargateClient not found");
     if (!walletAddress) throw new Error("wallet not connected");
-    const fee = makeFeeObject(feeArgs);
+    // const fee = makeFeeObject(feeArgs);
     let proposalResult;
     try {
-      proposalResult = await stargateClient.signAndBroadcast(
-        walletAddress,
-        [proposalMsg],
-        fee
-      );
+      proposalResult = await stargateClient.signAndBroadcast(proposalMsg);
     } catch (e) {
       console.error("broadcast error", e);
     }
