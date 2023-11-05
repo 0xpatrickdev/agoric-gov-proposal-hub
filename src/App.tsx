@@ -6,7 +6,6 @@ import { createId } from "@paralleldrive/cuid2";
 import { toast, ToastContainer } from "react-toastify";
 import { BundleForm, BundleFormArgs } from "./components/BundleForm";
 import { ProposalForm, ProposalArgs } from "./components/ProposalForm";
-import { ParameterChangeForm } from "./components/ParameterChangeForm";
 import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
 import { NetworkDropdown } from "./components/NetworkDropdown";
@@ -112,8 +111,7 @@ const App = () => {
       let proposalMsg;
       const feeArgs: Partial<StdFee> = {};
       if (msgType === "coreEvalProposal") {
-        if (vals.msgType !== "coreEvalProposal") return;
-        if (!vals.evals) return;
+        if (!("evals" in vals)) throw new Error("Missing evals");
         proposalMsg = makeCoreEvalProposalMsg({
           ...vals,
           proposer: walletAddress,
@@ -168,6 +166,7 @@ const App = () => {
                   titleDescOnly={true}
                   title="/cosmos.gov.v1beta1.TextProposal"
                   description="This is a governance proposal that includes a title and description."
+                  msgType="textProposal"
                 />
               ),
             },
@@ -181,6 +180,7 @@ const App = () => {
                   titleDescOnly={false}
                   title="/agoric.swingset.CoreEvalProposal"
                   description="This is a governance proposal that executes code. You will need to provide a JS Bundle, and a JSON Permit file."
+                  msgType="coreEvalProposal"
                 />
               ),
             },
@@ -200,10 +200,11 @@ const App = () => {
               title: "Parameter Change Proposal",
               msgType: "parameterChangeProposal",
               content: (
-                <ParameterChangeForm
+                <ProposalForm
                   title="/cosmos.gov.v1.MsgUpdateParams"
                   handleSubmit={handleProposal("parameterChangeProposal")}
                   description="This is a governance proposal to change chain configuration parameters."
+                  msgType="parameterChangeProposal"
                 />
               ),
             },
