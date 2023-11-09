@@ -13,6 +13,7 @@ import { useNetwork, NetName } from "../hooks/useNetwork";
 import { suggestChain } from "../lib/suggestChain";
 import { getNetConfigUrl } from "../lib/getNetworkConfig";
 import { registry } from "../lib/messageBuilder";
+import { useKeplrKeyChanged } from "../hooks/useKeplrKeyChanged";
 
 interface WalletContext {
   walletAddress: string | null;
@@ -87,6 +88,12 @@ export const WalletContextProvider = ({
       }
     }
   }, [netName, walletAddress]);
+
+  const handleKeplrKeyChanged = useCallback(() => {
+    if (walletAddress) connectWallet();
+  }, [walletAddress, connectWallet]);
+
+  useKeplrKeyChanged(handleKeplrKeyChanged);
 
   if (netName && currNetName !== netName) {
     if (walletAddress) connectWallet();
