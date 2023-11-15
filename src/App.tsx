@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { assertIsDeliverTxSuccess, DeliverTxResponse } from "@cosmjs/stargate";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import { createId } from "@paralleldrive/cuid2";
@@ -24,6 +24,7 @@ import {
 } from "./lib/messageBuilder";
 import { parseError } from "./utils/transactionParser";
 import { isValidBundle } from "./utils/validate";
+import { Modal } from "./components/Modal";
 
 const App = () => {
   const { netName } = useNetwork();
@@ -31,7 +32,9 @@ const App = () => {
   const proposalFormRef = useRef<HTMLFormElement>(null);
   const corEvalFormRef = useRef<HTMLFormElement>(null);
   const bundleFormRef = useRef<HTMLFormElement>(null);
+  const [showModal, setShowModal] = useState(false);
 
+  setTimeout(() => setShowModal(true), 500);
   async function signAndBroadcast(
     proposalMsg: EncodeObject,
     type: "bundle" | "proposal"
@@ -258,6 +261,23 @@ const App = () => {
         />
       </main>
       <Footer />
+      {showModal && (
+        <Modal title="New Website URL" open={true}>
+          <div className="space-y-12 sm:space-y-16 px-6 py-6">
+            <h2 className="text-base font-regular leading-7 text-gray-900">
+              Please visit{" "}
+              <a
+                href="https://cosgov.org"
+                className="text-blue-500 hover:text-blue-700 underline"
+              >
+                cosgov.org
+              </a>{" "}
+              to access the latest version of this website.
+            </h2>
+          </div>
+        </Modal>
+      )}
+
       <ToastContainer
         autoClose={false}
         position="bottom-right"
